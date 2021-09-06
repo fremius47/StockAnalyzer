@@ -1,4 +1,3 @@
-
 package com.crio.warmup.stock;
 
 import com.crio.warmup.stock.dto.PortfolioTrade;
@@ -26,6 +25,9 @@ class PortfolioManagerApplicationTest {
   }
 
 
+
+
+
   @Test
   public void testDebugValues() {
     List<String> responses = PortfolioManagerApplication.debugOutputs();
@@ -33,4 +35,3 @@ class PortfolioManagerApplicationTest {
   }
 
 }
-
