@@ -2,13 +2,12 @@
 package com.crio.warmup.stock;
 
 
-
-import com.crio.warmup.stock.dto.TiingoCandle;
-
 import com.crio.warmup.stock.dto.AnnualizedReturn;
 import com.crio.warmup.stock.dto.PortfolioTrade;
 import com.crio.warmup.stock.dto.TotalReturnsDto;
 import com.crio.warmup.stock.log.UncaughtExceptionHandler;
+import com.crio.warmup.stock.portfolio.PortfolioManager;
+import com.crio.warmup.stock.portfolio.PortfolioManagerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.File;
@@ -175,6 +174,21 @@ return Arrays.stream(portfolioTrades).map(trade -> {
   
   }
 
+  public static List<AnnualizedReturn> mainCalculateReturnsAfterRefactor(String[] args)
+      throws Exception {
+    
+    String file = args[0];
+    LocalDate endDate = LocalDate.parse(args[1]);
+    String contents = readFileAsString(file);
+    ObjectMapper objectMapper = getObjectMapper();
+    PortfolioTrade[] portfolioTrades = objectMapper.readValue(contents, PortfolioTrade[].class);
+    PortfolioManager portfolioManager =
+        PortfolioManagerFactory.getPortfolioManager(new RestTemplate());
+    return portfolioManager.calculateAnnualizedReturn(Arrays.asList(portfolioTrades), endDate);
+  }
+
+
+
 
 
   // TODO: CRIO_TASK_MODULE_JSON_PARSING
@@ -235,6 +249,8 @@ return Arrays.stream(portfolioTrades).map(trade -> {
 
     printJsonObject(mainCalculateSingleReturn(args));
 
+
+    printJsonObject(mainCalculateReturnsAfterRefactor(args));
   }
 }
 
