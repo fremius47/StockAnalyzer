@@ -251,6 +251,7 @@ return Arrays.stream(portfolioTrades).map(trade -> {
 
 
     printJsonObject(mainCalculateReturnsAfterRefactor(args));
+    
   }
 }
 
