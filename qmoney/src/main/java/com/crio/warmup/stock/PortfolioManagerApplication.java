@@ -1,10 +1,12 @@
 
 package com.crio.warmup.stock;
 
-import com.crio.warmup.stock.dto.AnnualizedReturn;
-import com.crio.warmup.stock.dto.PortfolioTrade;
+
 
 import com.crio.warmup.stock.dto.TiingoCandle;
+
+import com.crio.warmup.stock.dto.AnnualizedReturn;
+import com.crio.warmup.stock.dto.PortfolioTrade;
 import com.crio.warmup.stock.dto.TotalReturnsDto;
 import com.crio.warmup.stock.log.UncaughtExceptionHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,7 +19,6 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
-//import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -116,6 +117,64 @@ public class PortfolioManagerApplication {
         "UTF-8");
   }
 
+  public static List<AnnualizedReturn> mainCalculateSingleReturn(String[] args)
+  throws IOException, URISyntaxException {
+String file = args[0];
+final LocalDate endDate = LocalDate.parse(args[1]);
+String contents = readFileAsString(file);
+ObjectMapper objectMapper = getObjectMapper();
+PortfolioTrade[] portfolioTrades = objectMapper.readValue(contents, PortfolioTrade[].class);
+final String token = "d7ee5290251fd4882f10fde8ada179ccc1450745";
+String uri = "https://api.tiingo.com/tiingo/daily/$SYMBOL/prices?startDate=$STARTDATE&endDate=$ENDDATE&token=$APIKEY";
+
+return Arrays.stream(portfolioTrades).map(trade -> {
+  String url = uri.replace("$APIKEY", token).replace("$SYMBOL", trade.getSymbol())
+      .replace("$STARTDATE", trade.getPurchaseDate().toString())
+      .replace("$ENDDATE", endDate.toString());
+  TiingoCandle[] tiingoCandles = new RestTemplate().getForObject(url, TiingoCandle[].class);
+  Double buyPrice = 0.0;
+  Double sellPrice = 0.0;
+  for (TiingoCandle candle : tiingoCandles) {
+    if (candle.getDate().equals(trade.getPurchaseDate())) {
+      buyPrice = candle.getOpen();
+    }
+    if (candle.getDate().equals(endDate)) {
+      sellPrice = candle.getClose();
+    }
+  }
+  return calculateAnnualizedReturns(endDate, trade, buyPrice, sellPrice);
+})
+    .sorted(Comparator.comparing(AnnualizedReturn::getAnnualizedReturn).reversed())
+    .collect(Collectors.toList());
+}
+
+
+  // TODO: CRIO_TASK_MODULE_CALCULATIONS
+  //  Return the populated list of AnnualizedReturn for all stocks.
+  //  Annualized returns should be calculated in two steps:
+  //   1. Calculate totalReturn = (sell_value - buy_value) / buy_value.
+  //      1.1 Store the same as totalReturns
+  //   2. Calculate extrapolated annualized returns by scaling the same in years span.
+  //      The formula is:
+  //      annualized_returns = (1 + total_returns) ^ (1 / total_num_years) - 1
+  //      2.1 Store the same as annualized_returns
+  //  Test the same using below specified command. The build should be successful.
+  //     ./gradlew test --tests PortfolioManagerApplicationTest.testCalculateAnnualizedReturn
+
+  public static AnnualizedReturn calculateAnnualizedReturns(LocalDate endDate,
+      PortfolioTrade trade, Double buyPrice, Double sellPrice) {
+    System.out.println(String.format("sell-price = %f, buy-price = %f, days = %s",
+        sellPrice, buyPrice, trade.getPurchaseDate().until(endDate, ChronoUnit.DAYS)));
+    double totalReturns = ((sellPrice - buyPrice) / buyPrice);
+    double years = trade.getPurchaseDate().until(endDate, ChronoUnit.DAYS) / 365.24;
+    double annualizedReturns = Math.pow((1 + (totalReturns)), (1 / years)) - 1;
+    System.out.println(String.format("total-returns = %f, annual-returns = %f",
+        totalReturns, annualizedReturns));
+    return new AnnualizedReturn(trade.getSymbol(), annualizedReturns,
+        totalReturns);
+  
+  }
+
 
 
   // TODO: CRIO_TASK_MODULE_JSON_PARSING
@@ -160,8 +219,6 @@ public class PortfolioManagerApplication {
   }
 
 
-
-
   // Note:
   // Remember to confirm that you are getting same results for annualized returns as in Module 3.
 
@@ -174,6 +231,9 @@ public class PortfolioManagerApplication {
 
     printJsonObject(mainReadQuotes(args));
 
+
+
+    printJsonObject(mainCalculateSingleReturn(args));
 
   }
 }
