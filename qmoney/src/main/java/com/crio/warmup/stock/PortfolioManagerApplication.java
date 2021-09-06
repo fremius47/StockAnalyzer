@@ -84,6 +84,12 @@ public class PortfolioManagerApplication {
     return objectMapper;
   }
 
+  private static String readFileAsString(String filename) throws URISyntaxException, IOException {
+    return new String(Files.readAllBytes(resolveFileFromResources(filename).toPath()),
+        "UTF-8");
+  }
+
+
 
   // TODO: CRIO_TASK_MODULE_JSON_PARSING
   //  Follow the instructions provided in the task documentation and fill up the correct values for
