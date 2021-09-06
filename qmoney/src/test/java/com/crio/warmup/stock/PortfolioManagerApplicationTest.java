@@ -26,9 +26,6 @@ class PortfolioManagerApplicationTest {
   }
 
 
-
-
-
   @Test
   public void testDebugValues() {
     List<String> responses = PortfolioManagerApplication.debugOutputs();
