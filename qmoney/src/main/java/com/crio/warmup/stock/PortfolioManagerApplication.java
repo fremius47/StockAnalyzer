@@ -1,9 +1,11 @@
 
 package com.crio.warmup.stock;
 
-
 import com.crio.warmup.stock.dto.AnnualizedReturn;
 import com.crio.warmup.stock.dto.PortfolioTrade;
+
+import com.crio.warmup.stock.dto.TiingoCandle;
+import com.crio.warmup.stock.dto.TotalReturnsDto;
 import com.crio.warmup.stock.log.UncaughtExceptionHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -15,7 +17,7 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
-import java.util.Collections;
+//import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.ThreadContext;
 import org.springframework.web.client.RestTemplate;
+
 
 
 public class PortfolioManagerApplication {
@@ -48,6 +51,29 @@ public class PortfolioManagerApplication {
  
   }
 
+  public static List<String> mainReadQuotes(String[] args) throws IOException, URISyntaxException {
+    
+    String file = args[0];
+    LocalDate endDate = LocalDate.parse(args[1]);
+    String contents = readFileAsString(file);
+    ObjectMapper objectMapper = getObjectMapper();
+    PortfolioTrade[] portfolioTrades = objectMapper.readValue(contents, PortfolioTrade[].class);
+
+    String token = "d7ee5290251fd4882f10fde8ada179ccc1450745";
+    String uri = "https://api.tiingo.com/tiingo/daily/$SYMBOL/prices?startDate=$STARTDATE&endDate=$ENDDATE&token=$APIKEY";
+    return Arrays.stream(portfolioTrades).map(trade -> {
+      String url = uri.replace("$APIKEY", token).replace("$SYMBOL", trade.getSymbol())
+          .replace("$STARTDATE", trade.getPurchaseDate().toString())
+          .replace("$ENDDATE", endDate.toString());
+      TiingoCandle[] tiingoCandles = new RestTemplate().getForObject(url, TiingoCandle[].class);
+      return new TotalReturnsDto(trade.getSymbol(), Stream.of(tiingoCandles)
+          .filter(candle -> candle.getDate().equals(endDate))
+          .findFirst().get().getClose());
+    }).sorted(Comparator.comparing(TotalReturnsDto::getClosingPrice))
+        .map(TotalReturnsDto::getSymbol)
+        .collect(Collectors.toList());
+  
+  }
 
 
   // Note:
@@ -55,8 +81,9 @@ public class PortfolioManagerApplication {
   // 2. Remember to get the latest quotes from Tiingo API.
 
 
-
-
+  // TODO: CRIO_TASK_MODULE_REST_API
+  //  Find out the closing price of each stock on the end_date and return the list
+  //  of all symbols in ascending order by its close value on end date.
 
   // Note:
   // 1. You may have to register on Tiingo to get the api_token.
@@ -138,14 +165,14 @@ public class PortfolioManagerApplication {
   // Note:
   // Remember to confirm that you are getting same results for annualized returns as in Module 3.
 
-
-
   public static void main(String[] args) throws Exception {
     Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler());
     ThreadContext.put("runId", UUID.randomUUID().toString());
 
     printJsonObject(mainReadFile(args));
 
+
+    printJsonObject(mainReadQuotes(args));
 
 
   }
