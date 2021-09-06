@@ -31,13 +31,18 @@ public class PortfolioManagerImpl implements PortfolioManager {
 
   private RestTemplate restTemplate;
 
-
+  private StockQuotesService stockQuotesService;
 
   // Caution: Do not delete or modify the constructor, or else your build will break!
   // This is absolutely necessary for backward compatibility
   protected PortfolioManagerImpl(RestTemplate restTemplate) {
     this.restTemplate = restTemplate;
   }
+
+  protected PortfolioManagerImpl(StockQuotesService stockQuotesService) {
+    this.stockQuotesService = stockQuotesService;
+  }
+
 
 
   //TODO: CRIO_TASK_MODULE_REFACTOR
