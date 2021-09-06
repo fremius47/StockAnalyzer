@@ -1,4 +1,3 @@
-
 package com.crio.warmup.stock.quotes;
 
 import com.crio.warmup.stock.dto.Candle;
@@ -13,11 +12,13 @@ import org.springframework.web.client.RestTemplate;
 
 public class TiingoService implements StockQuotesService {
 
+  private final RestTemplate restTemplate;
 
+  
   protected TiingoService(RestTemplate restTemplate) {
     this.restTemplate = restTemplate;
   }
-
+  
 
   // TODO: CRIO_TASK_MODULE_ADDITIONAL_REFACTOR
   //  Implement getStockQuote method below that was also declared in the interface.
@@ -30,9 +31,7 @@ public class TiingoService implements StockQuotesService {
 
   //CHECKSTYLE:OFF
 
-  // TODO: CRIO_TASK_MODULE_ADDITIONAL_REFACTOR
-  //  Write a method to create appropriate url to call the Tiingo API.
-
+  
   @Override
   public List<Candle> getStockQuote(String symbol, LocalDate startDate, LocalDate endDate)
       throws JsonProcessingException
@@ -57,6 +56,5 @@ public class TiingoService implements StockQuotesService {
         .replace("$STARTDATE", startDate.toString())
         .replace("$ENDDATE", endDate.toString());
   }
-
 
 }
