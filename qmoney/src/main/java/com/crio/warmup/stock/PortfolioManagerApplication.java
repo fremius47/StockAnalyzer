@@ -246,7 +246,6 @@ return Arrays.stream(portfolioTrades).map(trade -> {
     printJsonObject(mainReadQuotes(args));
 
 
-
     printJsonObject(mainCalculateSingleReturn(args));
 
 
