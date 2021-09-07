@@ -6,6 +6,7 @@ import static java.time.temporal.ChronoUnit.SECONDS;
 
 import com.crio.warmup.stock.dto.AlphavantageDailyResponse;
 import com.crio.warmup.stock.dto.Candle;
+import com.crio.warmup.stock.exception.StockQuoteServiceException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -50,7 +51,7 @@ public class AlphavantageService implements StockQuotesService {
 
   @Override
   public List<Candle> getStockQuote(String symbol, LocalDate startDate, LocalDate endDate)
-      throws JsonProcessingException
+      throws JsonProcessingException , StockQuoteServiceException
   {
     //CHECKSTYLE:ON
     String response = restTemplate.getForObject(buildUri(symbol), String.class);
@@ -73,6 +74,9 @@ public class AlphavantageService implements StockQuotesService {
           .collect(Collectors.toList());
     } catch (Exception ex) {
 
+      if (ex instanceof RuntimeException) {
+        throw new StockQuoteServiceException("Alphavantage returned invalid response", ex);
+      }
 
       throw ex;
     }
