@@ -1,4 +1,3 @@
-
 package com.crio.warmup.stock.portfolio;
 
 import static java.time.temporal.ChronoUnit.DAYS;
@@ -17,10 +16,8 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,10 +26,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.springframework.web.client.RestTemplate;
 
+
 public class PortfolioManagerImpl implements PortfolioManager {
 
   private  RestTemplate restTemplate;
   private StockQuotesService stockQuotesService;
+  private static final int UNIT_TIMEOUT = 6;
 
   PortfolioManagerImpl( StockQuotesService stockQuotesService) {
     this.stockQuotesService = stockQuotesService;
@@ -54,40 +53,27 @@ public class PortfolioManagerImpl implements PortfolioManager {
       LocalDate endDate, int numThreads) throws InterruptedException,
       StockQuoteServiceException {
 
-        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
-        List<AnnualizedReturn> annualizedReturnList = new ArrayList<>();
-         
-        List<Future<AnnualizedReturn>> futureList = new ArrayList<>();
-        for(PortfolioTrade trade: portfolioTrades) {
-          Callable<AnnualizedReturn> callableObj = () -> {return getAnnualreturn(trade, endDate);};
-          Future<AnnualizedReturn> future = executor.submit(callableObj);
-          futureList.add(future);
-        }
-        
-        //convert result to list of annual returns
-        for(int i = 0; i < portfolioTrades.size() ; i++) {
-          Future<AnnualizedReturn> futureAnnualReturn = futureList.get(i);
-          try {
-            AnnualizedReturn annualizedReturn = futureAnnualReturn.get();
-            annualizedReturnList.add(annualizedReturn);
-          } catch (ExecutionException e) {
-            
-            throw new StockQuoteServiceException("Error while calling API",e);
-          }
-          
-        }
+        ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
+    List<Future<AnnualizedReturn>> responses = portfolioTrades.stream()
+        .map(portfolioTrade -> executorService.submit(
+            () -> getAnnualizedReturn(endDate, portfolioTrade)))
+        .collect(Collectors.toList());
+    executorService.shutdown();
+    executorService
+        .awaitTermination(portfolioTrades.size() * UNIT_TIMEOUT / numThreads, TimeUnit.SECONDS);
 
-        Comparator<AnnualizedReturn> sortByAnnualReturn = new Comparator<AnnualizedReturn>() {
-          public int compare( AnnualizedReturn annualreturn1, AnnualizedReturn annualreturn2) {
-            return (int) (annualreturn1.getAnnualizedReturn().compareTo(annualreturn2.getAnnualizedReturn()));
-          }
-        };
-        Collections.sort(annualizedReturnList, sortByAnnualReturn.reversed());
-        return annualizedReturnList;
-        
-        
+    List<AnnualizedReturn> results = new ArrayList<>();
+    for (Future<AnnualizedReturn> response : responses) {
+      try {
+        results.add(response.get());
+      } catch (ExecutionException e) {
+        throw new StockQuoteServiceException("Unable to get data from provider", e);
+      }
+    }
+    return results.stream()
+        .sorted(getComparator())
+        .collect(Collectors.toList());
 
-        
       }
 
     public AnnualizedReturn getAnnualreturn( PortfolioTrade trade,  LocalDate endDate)
