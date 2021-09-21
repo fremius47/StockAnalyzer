@@ -23,12 +23,12 @@ class StockQuoteServiceFactoryTest {
   @Test
   void getServiceAlphavantage() {
     assertTrue(StockQuoteServiceFactory.INSTANCE.getService("alphavantage", new RestTemplate())
-        instanceof AlphavantageService);
+        instanceof AlphaVantageService);
   }
 
   @Test
   void getServiceDefault() {
     assertTrue(StockQuoteServiceFactory.INSTANCE.getService("", new RestTemplate())
-        instanceof AlphavantageService);
+        instanceof AlphaVantageService);
   }
 }

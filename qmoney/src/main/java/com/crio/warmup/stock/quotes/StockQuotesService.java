@@ -13,7 +13,6 @@ public interface StockQuotesService {
 
   List<Candle> getStockQuote(String symbol, LocalDate from, LocalDate to)
       throws JsonProcessingException
-      , StockQuoteServiceException
-  ;
+      , StockQuoteServiceException;
 
 }

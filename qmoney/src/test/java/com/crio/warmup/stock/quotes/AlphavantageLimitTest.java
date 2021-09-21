@@ -26,7 +26,7 @@ class AlphavantageLimitTest {
 
   @Spy
   @InjectMocks
-  private AlphavantageService alphavantageService;
+  private AlphaVantageService alphavantageService;
 
   private String aaplQuotes = "{\"Information\": \"The **demo** API key is for demo purposes only. "
       + "Please claim your free API key at (https://www.alphavantage.co/support/#api-key) to "

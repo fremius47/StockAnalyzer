@@ -21,16 +21,6 @@ public class TiingoService implements StockQuotesService {
   }
   
 
-  // TODO: CRIO_TASK_MODULE_ADDITIONAL_REFACTOR
-  //  Implement getStockQuote method below that was also declared in the interface.
-
-  // Note:
-  // 1. You can move the code from PortfolioManagerImpl#getStockQuote inside newly created method.
-  // 2. Run the tests using command below and make sure it passes.
-  //    ./gradlew test --tests TiingoServiceTest
-
-
-  //CHECKSTYLE:OFF
 
   
   @Override
@@ -45,9 +35,6 @@ public class TiingoService implements StockQuotesService {
     return Arrays.asList(result);
   }
 
-
-  // TODO: CRIO_TASK_MODULE_ADDITIONAL_REFACTOR
-  //  Write a method to create appropriate url to call the Tiingo API.
 
   protected String buildUri(String symbol, LocalDate startDate, LocalDate endDate) {
     String token = "d7ee5290251fd4882f10fde8ada179ccc1450745";

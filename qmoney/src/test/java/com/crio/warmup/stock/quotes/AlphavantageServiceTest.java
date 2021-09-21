@@ -34,7 +34,7 @@ class AlphavantageServiceTest {
 
   @Spy
   @InjectMocks
-  private AlphavantageService alphavantageService;
+  private AlphaVantageService alphavantageService;
 
   private String aaplQuotes = "{\"Meta Data\": {\"1. Information\": \"Daily Time Series with Splits"
       + " and Dividend Events\",\"2. Symbol\": \"AAPL\",\"3. Last Refreshed\": \"2019-12-23\",\"4."
